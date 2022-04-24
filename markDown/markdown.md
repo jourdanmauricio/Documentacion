@@ -12,7 +12,8 @@
 - [Sabores de Markdown](#id5)
 - [Sintaxis básica](#id6)
 
-## ¿Qué es Markdown? {id='id1'}
+<div id='id1'></div>
+## ¿Qué es Markdown? 
 
 ***Markdown*** es un lenguaje de marcado ligero que puede usar para agregar elementos de formato a documentos de texto sin formato. Fue Creado por John Gruber en 2004.
 
@@ -24,8 +25,9 @@ El objetivo principal del diseño de la sintaxis de formato de Markdown es hacer
 
 </div>
 
+<div id='id2'></div>
 
-## ¿Por qué usar Markdown? {id='id2'}
+## ¿Por qué usar Markdown?
 
 - Markdown se puede utilizar ***para crear sitios web, documentos, notas, libros, presentaciones, mensajes de correo electrónico y documentación técnica***.
 
@@ -43,7 +45,9 @@ El objetivo principal del diseño de la sintaxis de formato de Markdown es hacer
 
 </div>
 
-## ¿Como funciona? {id='id3'}
+<div id='id3'></div>
+
+## ¿Como funciona? 
 
 Las aplicaciones de Markdown usan un procesador de Markdown (también conocido como "analizador" o "implementación") para tomar el texto con formato de Markdown y enviarlo a formato HTML. En ese momento, su documento puede verse en un navegador web o combinarse con una hoja de estilo e imprimirse. Puede ver una representación visual de este proceso a continuación.
 
@@ -55,8 +59,9 @@ Las aplicaciones de Markdown usan un procesador de Markdown (también conocido c
 
 </div>
 
+<div id='id4'></div>
 
-## ¿Para qué sirve Markdown? {id='id4'}
+## ¿Para qué sirve Markdown? 
 
 Markdown es una forma rápida y fácil de tomar notas, crear contenido para un sitio web y producir documentos listos para imprimir.
 
@@ -84,8 +89,9 @@ Markdown es una forma rápida y fácil de tomar notas, crear contenido para un s
 
 </div>
 
+<div id='id5'></div>
 
-## Sabores de Markdown {id='id5'}
+## Sabores de Markdown
 
 Uno de los aspectos más confusos del uso de Markdown es que prácticamente todas las aplicaciones de Markdown implementan una versión ligeramente diferente de Markdown. Estas variantes de Markdown se conocen comúnmente como sabores. 
 
