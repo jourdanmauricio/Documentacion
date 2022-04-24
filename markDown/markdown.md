@@ -13,6 +13,7 @@
 - [Sintaxis básica](#id6)
 
 <div id='id1'></div>
+
 ## ¿Qué es Markdown? 
 
 ***Markdown*** es un lenguaje de marcado ligero que puede usar para agregar elementos de formato a documentos de texto sin formato. Fue Creado por John Gruber en 2004.
