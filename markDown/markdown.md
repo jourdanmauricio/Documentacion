@@ -239,8 +239,6 @@ Como YouTube lo hace fácil, los usaremos como ejemplo. Tome este video, por eje
 ```
 [![Image alt text](https://img.youtube.com/vi/YOUTUBE-ID/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE-ID)
 ```
-[![Image alt text](https://img.youtube.com/vi/YOUTUBE-ID/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE-ID)
-
 YouTube genera automáticamente una imagen para cada video ( https://img.youtube.com/vi/YOUTUBE-ID/0.jpg), por lo que podemos usarla y vincular la imagen al video en YouTube. Después de reemplazar el texto alternativo de la imagen y agregar la ID del video, nuestro ejemplo se ve así:
 
 ```
@@ -249,8 +247,35 @@ YouTube genera automáticamente una imagen para cada video ( https://img.youtube
 [![Less Than Jake — Scott Farcas Takes It On The Chin](https://img.youtube.com/vi/PYCxct2e0zI/0.jpg)](https://www.youtube.com/watch?v=PYCxct2e0zI)
 
 
+- **<ins>Advertencias</ins>** Si necesita agregar advertencias, es posible que pueda usar comillas en bloque con emoji y énfasis para crear algo similar a las advertencias que ve en otros sitios web.
+
+> :warning: **Warning:** Do not push the big red button.
+
+> :memo: **Note:** Sunrises are beautiful.
+
+> :bulb: **Tip:** Remember to appreciate the little things in life.
+
+- **<ins>Emoji</ins>** Hay dos formas de agregar emoji a los archivos de Markdown: copiar y pegar el emoji en el texto con formato de Markdown o escribir códigos abreviados de emoji .
+
+<a href="https://tutorialmarkdown.com/emojis" _target="blanc">Emojis!</a>
+
+- **<ins>Centrar</ins>**. Tener la capacidad de centrar el texto es una necesidad al escribir un artículo o un informe. Desafortunadamente, Markdown no tiene ningún concepto de alineación de texto (una posible excepción es cuando se usan tablas ). La buena noticia es que hay una etiqueta HTML que puede usar: < center >. 
+
+```html
+<center>This text is centered.</center>
+```
+<center>This text is centered.</center>
+<br>
+
+- **<ins>Listas de tareas</ins>**. Las listas de tareas (también conocidas como listas de verificación y listas de tareas pendientes ) le permiten crear una lista de elementos con casillas de verificación. En las aplicaciones de Markdown que admiten listas de tareas, se mostrarán casillas de verificación junto al contenido. Para crear una lista de tareas, agregue guiones ( -) y corchetes con un espacio ( [ ]) delante de los elementos de la lista de tareas. Para seleccionar una casilla de verificación, agregue un xentre paréntesis ( [x]).
+<br>
+- [x] Write the press release
+- [ ] Update the website
+- [ ] Contact the media
+
 <div style="text-align: right"> 
 
   [:arrow_up:](#indice)
 
 </div>
+
