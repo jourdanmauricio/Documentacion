@@ -239,6 +239,8 @@ Como YouTube lo hace fácil, los usaremos como ejemplo. Tome este video, por eje
 ```
 [![Image alt text](https://img.youtube.com/vi/YOUTUBE-ID/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE-ID)
 ```
+[![Image alt text](https://img.youtube.com/vi/YOUTUBE-ID/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE-ID)
+
 YouTube genera automáticamente una imagen para cada video ( https://img.youtube.com/vi/YOUTUBE-ID/0.jpg), por lo que podemos usarla y vincular la imagen al video en YouTube. Después de reemplazar el texto alternativo de la imagen y agregar la ID del video, nuestro ejemplo se ve así:
 
 ```
