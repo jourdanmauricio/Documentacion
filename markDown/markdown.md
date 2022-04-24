@@ -104,7 +104,9 @@ Para comprender el concepto de sabores de Markdown, podría ser útil pensar en 
 
 </div>
 
-## Sintaxis básica {id='id6'}
+<div id='id6'></div>
+
+## Sintaxis básica
 
 - **<ins>Encabezados</ins>**
 
