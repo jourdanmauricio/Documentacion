@@ -1,6 +1,9 @@
 # Básicos - Markdown
 
-## Tabla de contenidos {id='indice'}
+<div id='indice'></div>
+
+## Tabla de contenidos 
+
 
 - [¿Qué es Markdown?](#id1)
 - [¿Por qué usar Markdown?](#id2)
