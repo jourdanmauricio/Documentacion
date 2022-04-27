@@ -493,3 +493,671 @@ def show_person(
 ):
     return {person_id: "It exists!"}
 ```
+
+## Response Model
+
+Para realiza una aplicación segura debemos tener dos temas en cuenta a la hora de la creación de la contraseña
+
+- La contraseña no se le envía al cliente
+- La contraseña no se almacena en texto plano
+
+<u>Response Model</u>:
+
+Es un atributo de nuestro path operation. Es llamado desde nuestro Path Operation Decorator, el cual es utilizado para evitar el filtrado de información sensible. Definimos un nuevo modelo eliminando los atributos que no deseamos retornar.
+
+Una buena práctica es generar un modelo Base con atributos generales e ir heredando de este para ir agregando que atributos extra necesitamos, por ejemplo BaseUser no contiene el password, y CreationUser que hereda de BaseUser solo agregaría el password dentro de ella, así se organiza un poco mejor los modelos.
+
+```python
+@app.post("/person/new", response_model=PersonOut)
+def create_person(person: Person = Body(...)):
+    return person
+```
+
+## Mejorando la calidad del código: eliminando líneas duplicadas
+
+Aunque que hicimos anteriormente funciona técnicamente no es la forma mas optima de trabajar nuestros modelos, lo que deberiamos hacer es generar una modelo base como PersonBase y hacer que de allí hereden Person y PersonOut
+
+<u>Modelos Mejorados</u>
+
+```python
+class PersonBase(BaseModel):
+    first_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        example='John',
+    )
+    last_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        example='Doe',
+    )
+    age: int = Field(
+        ...,
+        gt=0,
+        le=110,
+        example=25,
+    )
+    hair_color: Optional[HairColor] = Field(
+        default=None,
+        example=HairColor.blonde,
+    )
+    is_married: Optional[bool] = Field(
+        default=None,
+        example=False
+    )
+    email = EmailStr()
+
+    class Config:
+        schema_extra = {
+            "example": {
+                'first_name': 'Edkar',
+                'last_name': 'Chachati',
+                'age': 20,
+                'hair_color': HairColor.black,
+                'is_married': False
+            }
+        }
+
+class Person(PersonBase):
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=50,
+        example='password'
+    )
+
+class PersonOut(PersonBase):
+    pass
+```
+
+## Status Code personalizados
+
+Los status code o codigos de estado son respuestas http los cuales indican el el estado de finalizacion de una solicitud especifica:
+
+- Respuestas informativas (100-199)
+- Respuestas Satisfactorias (200-299)
+- Redirecciones (300-399)
+- Errores de los clientes (400-499)
+- Errores de los servidores (500-599)
+
+mas información: https://developer.mozilla.org/es/docs/Web/HTTP/Status
+
+Algunos tipos de status code especiales:
+
+- 201: Algo se creo (created), por ejemplo si estamos en una path operation desde el cliente al servidor, que envia una petición de tipo post y en esa petición creamos un usuario y guardamos el usuario en la base de datos, el servidor responde 201.
+- 204: No content. Es decir que no hay ninguna respuesta, aunque todo haya salido bien.
+- 404: Accedimos a un endpoint que no existe. (No exists)
+- 422: Validation error. Es decir que el cliente nos envia un dato que no esta en el formato que esperábamos. Por ejemplo si esperábamos un validation de no mas de 20 caracteres y le llega al server de 21 caracteres.
+
+```python
+
+#FastAPI
+from fastapi import FastAPI
+from fastapi import status
+from fastapi import Body, Query, Path
+
+@app.get(
+    path="/",
+    status_code=status.HTTP_200_OK
+    )
+def home():
+    return {"Hello": "World"}
+
+# Request and Response Body
+
+@app.post(
+    path="/person/new",
+    response_model=PersonOut,
+    status_code=status.HTTP_201_CREATED
+    )
+def create_person(person: Person = Body(...)):
+    return person
+
+# Validaciones: Query Parameters
+
+@app.get(
+    path="/person/detail",
+    status_code=status.HTTP_200_OK
+    )
+def show_person(
+    name: Optional[str] = Query(
+        None,
+        min_length=1,
+        max_length=50,
+        title="Person Name",
+        description="This is the person name. It's between 1 and 50 characters",
+        example="Rocío"
+        ),
+    age: str = Query(
+        ...,
+        title="Person Age",
+        description="This is the person age. It's required",
+        example=25
+        )
+):
+    return {name: age}
+
+```
+
+PUT: Si se modifica un recurso existente, DEBERÍAN enviarse los códigos de respuesta 200 (OK) o 204 (Sin contenido) para indicar que la solicitud se completó con éxito.
+
+**DELETE: ** Una respuesta exitosa DEBE ser 200 (OK) si la respuesta incluye una entidad que describe el estado, 202 (Aceptada) si la acción aún no se ha promulgado, o 204 (Sin contenido) si la acción se ha promulgado pero la respuesta no incluye una entidad.
+
+## Formularios
+
+FastApi no funciona por defecto con formularios debemos dar uso de la libreria python multipart instalas usando: $ pip install python-multipart
+
+```python
+
+#FastAPI
+from fastapi import FastAPI
+from fastapi import status
+from fastapi import Body, Query, Path, Form
+from starlette.types import Message
+
+# Model
+class LoginOut(BaseModel):
+    username: str = Field(..., max_length=20, example="miguel2021")
+    message: str = Field(default="Login Succesfully!")
+
+@app.get(
+    path="/",
+    status_code=status.HTTP_200_OK
+    )
+
+# Routes
+
+@app.post(
+    path="/login",
+    response_model=LoginOut,
+    status_code=status.HTTP_200_OK
+)
+def login(username: str = Form(...), password: str = Form(...)):
+    return LoginOut(username=username)
+```
+
+## Cookie y Header Parameters
+
+<u>Cookies</u>
+
+Una pieza de código que un servidor mete en tu computadora cuando estas navegando en la web
+
+<u>Headers</u>
+Una parte de una petición o respuesta HTTP que contiene datos sobre la petición o la respuesta, como el formato, quien la hizo, el contenido, etc…
+
+Ej:
+
+```python
+#Pydantic
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import EmailStr
+
+#FastAPI
+from fastapi import FastAPI
+from fastapi import status
+from fastapi import Body, Query, Path, Form, Header, Cookie
+from starlette.status import HTTP_200_OK
+from starlette.types import Message
+
+
+@app.post(
+    path='/contact',
+    status_code=status.HTTP_200_OK
+)
+def contact(
+    first_name: str = Form(
+        ...,
+        max_length=20,
+        min_length=1,
+        example='Peter'
+    ),
+    last_name: str = Form(
+        ...,
+        max_length=20,
+        min_length=1,
+        example='Chiguire'
+    ),
+    email: EmailStr = Form(
+        ...,
+        example='peterchiguire@gmail.com'
+    ),
+    message: str = Form(
+        ...,
+        min_length=20,
+        max_length=280,
+        example='Hola, estoy interesado en tu proyecto, jajaj xdddd'
+    ),
+    user_agent: Optional[str] = Header(default=None),
+    ads: Optional[str] = Cookie(default=None)
+):
+    return {
+        'first_name': first_name,
+        'last_name': last_name,
+        'email': email,
+        'message': message,
+        'user_agent': user_agent,
+        'ads': ads
+    }
+```
+
+Response:
+
+```json
+{
+  "first_name": "Peter",
+  "last_name": "Chiguire",
+  "email": "peterchiguire@gmail.com",
+  "message": "Hola, estoy interesado en tu proyecto, jajaj xdddd",
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36 OPR/80.0.4170.61",
+  "ads": null
+}
+```
+
+## Archivos
+
+Resumen Tipos de entradas de datos en FastAPI:
+
+- Path Parameters -> URL y obligatorios
+- Query Parameters -> URL y opcionales
+- Request Body -> JSON
+- Formularios -> Campos en el frontend
+- Headers -> Cabeceras HTTP que pueden ser de cliente a servidor y viceversa
+- Cookies -> Almacenan información
+- Files -> Archivos como imágenes, audio, vídeo, etc.
+
+Para manejar archivos con FastAPI necesitamos de las clases ‘File’ y ‘Upload File’.
+
+Upload file tiene 3 parámetros:
+
+- Filename -> Nombre del archivo
+- Content_Type -> Tipo de archivo
+- File -> El archivo en sí mismo
+
+---
+
+Entrada de datos que se refiere a los archivos FastAPI, por ejemplo una imagen o un video, se utilizan dos clases File y UploadFile
+
+<u>UploadFile</u>
+
+Esta clase tiene una serie de parametros, se refiere a la clase donde se guardará el archivo
+
+- filename: se refiere al nombre del archivo, con esto tenemos el control sobre el nombre del archivo que suba el cliente a la aplicación
+- content_type: formato del archivo por ejemplo JPEG, MP4, GIF…
+- file: se refiere al archivo en si mismo, los bytes del mismo
+
+<u>File</u>
+
+Hereda de Form y funciona similar a las clases Query, Path y Body, se encarga de guardar los bytes del archivo.
+
+Ventajas de usar UploadFile en lugar de solo File o Bytes
+
+- El archivo se guardará en la memoria hasta que supere un tamaño máximo, al pasar ese límite se guardara en el disco, esto quiere decir que funciona mucho mejor con archivos grandes sin consumir toda la memoria RAM
+- Puedes obtener metadata del archivo
+- funciona como un file-like async interface.
+- Usa metodo Asincronos como write, read, seek y close
+
+## Utilizando las clases File y UploadFile
+
+<u>Files</u>
+
+```python
+@app.post(
+    path="/post-image"
+)
+def post_image(
+    image: UploadFile = File(...)
+):
+    return {
+        "Filename": image.filename,
+        "Format": image.content_type,
+        "Size(kb)": round(len(image.file.read())/1024, ndigits=2)
+    }
+```
+
+## HTTPException
+
+Vamos a validar un error. Buscaremos el id de una persona en una lista. Si no existe retornará un 404.
+
+```python
+from fastapi import HTTPException
+
+# Validaciones: Path Parameters
+
+persons = [1, 2, 3, 4, 5]
+
+@app.get("/person/detail/{person_id}")
+def show_person(
+    person_id: int = Path(
+        ...,
+        gt=0,
+        example=123
+        )
+):
+    if person_id not in persons:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="¡This person doesn't exist!"
+        )
+    return {person_id: "It exists!"}
+```
+
+## Comenzando a ordenar nuestra documentación: etiquetas
+
+Las etiquetas (tags) son un título que aparece en la documentación interactiva para que las path operations estén en un orden correcto.
+
+Para ello se utiliza el parámetro tag en el path operation decorator.
+
+```python
+@app.get(
+    path='/person/detail',
+    status_code=status.HTTP_200_OK,
+    tags=['Persons']
+    )
+
+@app.post(
+    path='/contact',
+    status_code=status.HTTP_200_OK,
+    tags=['Forms']
+)
+
+@app.post(
+    path='/post-image',
+    tags=['Files']
+)
+```
+
+![image info](./assets/images/FastAPI_1.png)
+
+## Nombre y descripción de una path operation
+
+<u>¿Qué es un docstring en Python?</u> Es un String literal de toda la vida que ocurre como el primer statement en el módulo, función, clase o método definido. En este caso con fastApi automáticamente podemos ver los docstrings en la documentación interactiva, pero si quisiéramos ver el docstring cualquiera podemos usar el método doc.
+
+Un ejemplo sería:
+
+```python
+def nothing(self):
+	''' This function do nothing'''
+	pass
+print(nothing.__doc__)
+// El resultado sería This function do nothing
+```
+
+Al final su funcíón es la de documentar el código de cada función y cada clase.
+
+---
+
+En Python existe algo llamado Docstring (https://peps.python.org/pep-0257/).
+
+Se utiliza las comillas '''
+
+<u>Estructura recomendada</u>:
+
+- Título de la función (qué es lo que hace).
+- Descripción de la función (cómo usarla).
+- Parámetros de la función (se puede usar markdown).
+- Resultado que devuelve la función.
+
+Cabe mencionar que se puede usar Markdown para darle formato.
+
+Adicionalmente, en el path operation decorator se puede agregar el parámetro summary para poner una breve descripción o título a la path operation
+
+```python
+@app.post(
+    path='/person/new',
+    response_model=PersonOut,
+    status_code=status.HTTP_201_CREATED,
+    tags=['Persons'],
+    summary='Create Person in the app'
+    )
+def create_person(person: Person = Body(...)):
+    '''
+        Create Person
+
+        This path operation creates a person in the app and save the information in the database
+
+        Parameters:
+        - Request body parameter:
+            - **person: Person** -> A person model with first name, last name, age, hair color and marital status
+
+        Returns a person model with first name, last name, age, hair color and marital status
+    '''
+    return person
+```
+
+![image info](./assets/images/FastAPI_2.png)
+
+## Deprecar una path operation
+
+Deprecar una pieza de código sucede cuando:
+
+- Se encuentra un mejor método, mas eficiente para resolver un problema. Lo que hacemos no es eliminar dicho método, sino que lo dejamos sin efecto para aprovechar el código posteriormente (si lo requerimos nuevamente)
+
+- Una funcionalidad diferente de nuestro código a la que ya tenemos definida
+
+- Cuando se esta realizando una refactorización profunda del código, debido a que no tiene las mejores practicas, se define deprecar las path operation que se tienen por otras nuevas y se reemplazan.
+  Nota: Siempre es mejor mantener el código que ya existe. Deprecaremos el código como última instancia.
+
+Marcar una Path Operation como Deprecated es indicar que está obsoleta y ya hay una nueva forma de hacer la misma operación.
+
+Las funciones Deprecated serán removidas de la API luego de cierto tiempo, quienes no hayan prestado atención y adaptado sus implementaciones a tiempo se arriesgan a que su aplicación deje de funcionar correctamente.
+
+Para deprecar una path operation se agrega el parámetro deprecated al path operation decorator asignándole el valor True.
+
+```python
+@app.get(
+    path='/person/detail',
+    status_code=status.HTTP_200_OK,
+    tags=['Persons'],
+    deprecated=True
+    )
+```
+
+## Presentación del proyecto: Twitter
+
+Hasta ahora desarrollamos Hello Word aplicando teoría pero sin un propósito. A partir de aquí vamos a desarrollar el proyecto twitter.
+
+"Tenemos un Twitter con users y tweets. Los tweets publicados pueden ser vistos por todos los usuarios. Es una versión inicial...
+
+Así como existen convenciones para la forma en la que escribimos el código, también existen convenciones para la forma en la que se nombran o se definen las rutas en los endpoints.
+
+Dejo este link con algunas reglas de ejemplo: https://restfulapi.net/resource-naming/
+
+<u>URLs</u> Teniendo lo anterior en cuenta, sugeriría que utilicen las siguientes definiciones:
+
+**Tweets**
+
+- GET /tweets/ -> Shows all tweets
+- GET /tweets/{id} -> Shows a specific tweet
+- POST /tweets/ -> Creates a new tweet
+- PUT /tweets/{id} -> Updates a specific tweet
+- DELETE /tweets/{id} -> Deletes a specific tweet
+
+**Authentication**
+
+- POST /auth/signup -> Registers a new user
+- POST /auth/login -> Login a user
+
+**Users**
+
+- GET /users/ -> Shows all users
+- GET /users/{id} -> Gets a specific user
+- PUT /users/{id} -> Updates a specific user
+- DELETE /users/{id} -> Deletes a specific user
+
+## Configuración inicial del proyecto
+
+Creamos un nuevo proyecto.
+
+```bash
+$mkdir twitter-api-fastapi
+$cd twitter-api-fastapi
+# Creamos el entorno virtual
+# Windows
+$py -m venv venv
+# Linux,mac
+$python3 -m venv venv
+# Conda
+$conda create --name api-fastapi fastapi uvicorn
+
+# Para activar el ambiente
+$source venv/bin/activate
+$conda activate api-fastapi
+
+# Instalar dependencias
+$pip install fastapi uvicorn
+# Al crear el ambiente con conda ya las instalamos
+
+# Repositorio de git
+$git init
+$code .
+```
+
+Creamos el archivo main.py y .gitignore (incluimos el venv/ o nombre del entorno virtual)
+
+```python
+# main.py
+from fastapit import FastAPI
+
+app = FastAPI()
+
+@app.get(path="/")
+def home():
+    return{"Tweeter API": "Working!"}
+# FastAPI transforma automáticamente el diccionario a JSON
+```
+
+En la consola:
+
+```bash
+# Iniciamos el servidor
+$uvicorn main:app --reload
+```
+
+En el navegador vemos la documentación: 127.0.0.1:8000/docs
+
+Y verificamos el endpoint: 127.0.0.1:8000
+
+## Modelos: User
+
+Creamos una rama para incorporar los modelos.
+
+```bash
+$git checkout -b "models"
+```
+
+Ver codigo...
+
+Como vemos el modelo users tiene un campo llamado user_id definido de la siguiente manera:
+
+```python
+from uuid import UUID
+
+user_id: UUID = Field(...)
+```
+
+- UUID (significa Universal Unique identifier), es una clase de python que nos permite colocar un identificador único a cada uno de los usuarios. Tiene el aspecto: assad745-ddssd454-asas41-asas21
+
+Instalamos el validador de emails:
+
+```bash
+$conda install -c conda-forge email_validator
+# o
+$pip install pydantic["email"]
+```
+
+## Modelos: Tweets
+
+> Tip "A timestamp without a time zone attached gives no useful information,because without the time zone, you cannot infer what point in time your application is really referring to."
+
+No nos sirve de nada tener una fecha y hora si no sabemos a que zona horaria corresponde, para esto tenemos que crear un ‘time zone-aware timestamp’ para lo cual propongo hacer lo siguiente
+
+```python
+from datetime import datetime
+from datetutil import tz  # Esto debes instalarlo en el enorno virtual con pip install python-datetutil
+created_at = datetime.utcnow().replace(tzinfo=tz.tzutc())
+```
+
+## Esqueleto de las Path Operations: Users
+
+Recordemos los paths:
+
+**Authentication**
+
+- POST /auth/signup -> Registers a new user
+- POST /auth/login -> Login a user
+
+**Users**
+
+- GET /users/ -> Shows all users
+- GET /users/{id} -> Gets a specific user
+- PUT /users/{id} -> Updates a specific user
+- DELETE /users/{id} -> Deletes a specific user
+
+## Esqueleto de las Path Operations: Tweets
+
+Recordemos los paths:
+
+**Tweets**
+
+- GET /tweets/ -> Shows all tweets
+- GET /tweets/{id} -> Shows a specific tweet
+- POST /tweets/ -> Creates a new tweet
+- PUT /tweets/{id} -> Updates a specific tweet
+- DELETE /tweets/{id} -> Deletes a specific tweet
+
+## Registrando usuarios
+
+Como aún no incorporamos BD, utilizaremos archivos.
+
+Creamos dos archivos: users.json y tweets.json
+
+- Lo primero que realizamos es la docstring, documentamos la función.
+- Para definir el request body no podemos utilizar el modelo user porque nos falta el password. Creamos un nuevo modelo (UserRegister) heredando de User y de Userlogin.
+
+> Tip: documentación de FastApi para trabajar con proyectos un poco más grandes, con varios archivos y carpetas. https://fastapi.tiangolo.com/tutorial/bigger-applications/
+
+## Creando la lógica del registro de usuarios
+
+> tip
+> Exportar un modelo pydantic a json se puede hacer más fácil de la siguiente manera: user.json()
+> Sin la necesidad de sobreescribir atributos para convertirlos de forma manual (UUID y Date). Docs aquí: https://pydantic-docs.helpmanual.io/usage/exporting_models/#modeljson
+
+> tip
+> Lo segundo, el UUID debería ser generado por el servidor y no enviado por el usuario. Estos se pueden generar de forma simple con la misma librería de donde se exportó la clase UUID:
+> uuid.uuid1()
+> Para esto es necesario que el modelo de entrada no contenga el ID, el de salida sí.
+
+> tip
+> Es preciso señalar que no debemos guardar las contraseñas de nuestros usuarios de forma explicita en nuestras bases de datos porque podemos caer en fuertes problemas de seguridad y legales. La alternativa a ello son las tablas de Hash.
+
+## Publicando Tweets
+
+> Tip
+> Algunas cosas como el created date, tweet id y ese tipo de cosas no es como que el usuario las ponga el mismo, entonces decidí en la misma logica de la funcion que el mismo backend de la app sea el encargado de setear un random UUID al tweet y de setear su fecha de creacion (la fecha y hora UTC del momento en el que se hizo el http request). Me quedó así:
+
+```python
+def post_a_tweet(tweet: TweetIn = Body(...)):
+    with open('./data/tweets.json', 'r+', encoding='utf-8') as f:
+        list_of_tweets = json.load(f)
+        tweet = dict(tweet)
+
+        #Casting user atributes
+        tweet['user'] = dict(tweet['user'])
+        tweet['user']['user_id'] = tweet['user']['user_id'].hex
+        tweet['user']['birth_date'] = tweet['user']['birth_date'].isoformat()
+        if tweet['user']['gender'] is not None:
+            tweet['user']['gender'] = str(tweet['user']['gender']).rpartition('.')[2]
+
+        #Adding some tweet atributes
+        tweet['tweet_id'] = uuid.uuid1().hex
+        tweet['created_at'] = datetime.utcnow().replace(tzinfo=tz.tzutc()).isoformat()
+        tweet['updated_at'] = None
+        list_of_tweets.append(tweet)
+        f.seek(0)
+        json.dump(list_of_tweets, f)
+
+    return tweet
+```
